@@ -1,4 +1,4 @@
-Name;Date;Year;Month;Week;Monday Size;Weekly;Monday;Tuesday;First Touches;Other Side Taken;End Up;High Touches;Low Touches;Touches;day to low;day to high
+eName;Date;Year;Month;Week;Monday Size;Weekly;Monday;Tuesday;First Touches;Other Side Taken;End Up;High Touches;Low Touches;Touches;day to low;day to high
 Range;March 24, 2025;2025;March;4th Week;3.8%;Bearish;Bullish;Bearish;Monday Low;No;Bellow;0;1;"""Friday low""";4;0
 Range;March 17, 2025;2025;March;3rd Week;2.82%;Bullish;Bullish;Bearish;Monday Low;Yes;Above;3;1;"""Friday High, Sunday High, Thursday High, Tuesday low, Wednesday High""";1;2
 Range;March 10, 2025;2025;March;2nd Week;7.91%;Bullish;Bearish;Bullish;Monday Low;Yes;Above;5;1;"""Friday High, Saturday High, Sunday High, Thursday High, Tuesday low, Wednesday High""";1;2
@@ -11,11 +11,11 @@ Range;January 27, 2025;2025;January;4th Week;5.65%;Bearish;Bearish;Bearish;Monda
 Range ;January 20, 2025;2025;January;3rd Week;10.5%;Bullish;Bullish;Bullish;;;Inside;0;0;"""""";0;0
 Range ;January 13, 2025;2025;January;2nd Week;7.69%;Bullish;Bearish;Bullish;Monday High;;Above;1;0;"""Tuesday High""";0;1
 Range ;January 6, 2025;2025;January;1st Week;4.5%;Bearish;Bullish;Bearish;Monday High;Yes;Bellow;1;1;"""Tuesday High, Tuesday low""";1;1
-Range;December 30, 2024;2024;Desember;5th Week;3.87%;Bullish;Bearish;Bullish;Monday High;No;Above;3;0;"""Thursday High, Tuesday High, Wednesday High""";0;1
-Range;December 23, 2024;2024;Desember;4th Week;4.36%;Bearish;Bearish;Bullish;Monday High;No;Inside;3;0;"""Friday High, Thursday High, Tuesday High""";0;1
-Range ;December 16, 2024;2024;Desember;3rd Week;4.4%;Bearish;Bullish;Bearish;Monday High;Yes;Bellow;1;1;"""Tuesday High, Wednesday low""";2;1
-Range ;December 9, 2024;2024;Desember;2nd Week;7.7%;Bullish;Bearish;Bearish;Monday High;No;Above;5;0;"""Friday High, Saturday High, Sunday High, Thursday High, Wednesday High""";0;2
-Range ;December 2, 2024;2024;Desember;1st Week;4%;Bullish;Bearish;Bullish;Monday Low;Yes;Above;3;2;"""Friday High, Thursday High, Tuesday low, Wednesday High""";1;2
+Range;December 30, 2024;2024;December;5th Week;3.87%;Bullish;Bearish;Bullish;Monday High;No;Above;3;0;"""Thursday High, Tuesday High, Wednesday High""";0;1
+Range;December 23, 2024;2024;December;4th Week;4.36%;Bearish;Bearish;Bullish;Monday High;No;Inside;3;0;"""Friday High, Thursday High, Tuesday High""";0;1
+Range ;December 16, 2024;2024;December;3rd Week;4.4%;Bearish;Bullish;Bearish;Monday High;Yes;Bellow;1;1;"""Tuesday High, Wednesday low""";2;1
+Range ;December 9, 2024;2024;December;2nd Week;7.7%;Bullish;Bearish;Bearish;Monday High;No;Above;5;0;"""Friday High, Saturday High, Sunday High, Thursday High, Wednesday High""";0;2
+Range ;December 2, 2024;2024;December;1st Week;4%;Bullish;Bearish;Bullish;Monday Low;Yes;Above;3;2;"""Friday High, Thursday High, Tuesday low, Wednesday High""";1;2
 Range;November 25, 2024;2024;November;4th Week;6.43%;Bearish;Bearish;Bearish;Monday Low;No;Inside;0;2;"""Tuesday low, Wednesday low""";1;0
 Range ;November 18, 2024;2024;November;3rd Week;3.78%;Bullish;Bullish;Bullish;Monday High;No;Above;2;0;"""Tuesday High, Wednesday High""";0;1
 Range ;November 11, 2024;2024;November;2nd Week;11.91%;Bullish;Bullish;Bearish;Monday High;No;Above;5;0;"""Friday High, Sunday High, Thursday High, Tuesday High, Wednesday High""";0;1
