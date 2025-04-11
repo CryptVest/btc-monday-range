@@ -47,4 +47,18 @@ if run_filter:
     filtered_df = filtered_df[
         (filtered_df["Date"] >= pd.to_datetime(date_range[0])) &
         (filtered_df["Date"] <= pd.to_datetime(date_range[1])) &
-        (filtered_df
+        (filtered_df["Monday Size"] >= monday_range[0]) &
+        (filtered_df["Monday Size"] <= monday_range[1]) &
+        (filtered_df["Year"].isin(selected_years)) &
+        (df["Month"].apply(lambda x: (x - 1) // 3 + 1).isin(selected_quarters)) &
+        (df["Weekly"].isin(week_filter)) &
+        (df["Monday"].isin(mon_filter)) &
+        (df["Tuesday"].isin(tue_filter))
+    ]
+    if other_side != "All":
+        filtered_df = filtered_df[filtered_df["Other Side Taken"] == other_side]
+
+    st.success(f"✅ {len(filtered_df)} rows matched the filters.")
+    st.dataframe(filtered_df, use_container_width=True)
+else:
+    st.dataframe(df, use_container_width=True)
