@@ -5,9 +5,27 @@ st.set_page_config(page_title="BTC Monday Filter", layout="wide")
 
 @st.cache_data
 def load_data():
-    # Load semicolon-delimited CSV and parse date properly
+    # Load semicolon-delimited CSV
     df = pd.read_csv("btc_data.csv", delimiter=";")
+
+    # Check for required column
+    if "Date" not in df.columns:
+        st.error("❌ 'Date' column not found in CSV. Check delimiter and column names.")
+        st.stop()
+
+    # Parse date
     df["Date"] = pd.to_datetime(df["Date"], format="%B %d, %Y")
+
+    # Parse Monday Size from string with %
+    df["Monday Size"] = df["Monday Size"].str.rstrip('%').astype(float)
+
+    # Convert Year to integer
+    df["Year"] = df["Year"].astype(int)
+
+    # Convert Month name to number
+    df["Month_Num"] = pd.to_datetime(df["Month"], format="%B").dt.month
+    df["Quarter"] = ((df["Month_Num"] - 1) // 3 + 1)
+
     return df
 
 df = load_data()
@@ -23,38 +41,27 @@ with st.sidebar:
     date_range = st.date_input("Date Range", [min_date, max_date])
 
     # Monday Range %
-    min_range = float(df["Monday Size"].str.rstrip('%').astype(float).min())
-    max_range = float(df["Monday Size"].str.rstrip('%').astype(float).max())
+    min_range = float(df["Monday Size"].min())
+    max_range = float(df["Monday Size"].max())
     monday_range = st.slider("Monday Range (%)", min_value=min_range, max_value=max_range, value=(min_range, max_range))
 
     # Other Side Taken
     other_side = st.selectbox("Other Side Taken", ["All", "Yes", "No"])
 
-    # Convert Year to numeric if needed
-    df["Year"] = df["Year"].astype(int)
-
-    # Quarter + Year
+    # Year & Quarter
     selected_years = st.multiselect("Select Year(s)", sorted(df["Year"].unique()), default=df["Year"].unique())
-    
-    # Convert Month name to numeric
-    df["Month_Num"] = pd.to_datetime(df["Month"], format="%B").dt.month
-    df["Quarter"] = ((df["Month_Num"] - 1) // 3 + 1)
-
     selected_quarters = st.multiselect("Select Quarter(s)", [1, 2, 3, 4], default=[1, 2, 3, 4])
 
-    # Bull/Bear filters
+    # Weekly direction
     week_filter = st.multiselect("Weekly", df["Weekly"].unique(), default=df["Weekly"].unique())
     mon_filter = st.multiselect("Monday", df["Monday"].unique(), default=df["Monday"].unique())
     tue_filter = st.multiselect("Tuesday", df["Tuesday"].unique(), default=df["Tuesday"].unique())
 
-    # Search Button
+    # Filter button
     run_filter = st.button("🔎 Search")
 
-# Data Filtering
+# Filter logic
 filtered_df = df.copy()
-
-# Convert "Monday Size" from string percent to float
-filtered_df["Monday Size"] = filtered_df["Monday Size"].str.rstrip('%').astype(float)
 
 if run_filter:
     filtered_df = filtered_df[
@@ -68,6 +75,7 @@ if run_filter:
         (filtered_df["Monday"].isin(mon_filter)) &
         (filtered_df["Tuesday"].isin(tue_filter))
     ]
+
     if other_side != "All":
         filtered_df = filtered_df[filtered_df["Other Side Taken"] == other_side]
 
