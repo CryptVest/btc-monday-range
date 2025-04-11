@@ -2,8 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import calendar
-import datetime
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 st.set_page_config(page_title="BTC Monday Filter", layout="wide")
 
@@ -24,409 +23,9 @@ def load_data():
     # Convert Month name to number
     df["Month_Num"] = pd.to_datetime(df["Month"], format="%B").dt.month
     df["Quarter"] = ((df["Month_Num"] - 1) // 3 + 1)
-    # Add week number
-    df["Week_Number"] = df["Date"].dt.isocalendar().week
+    # Add week number for calendar view
+    df["Week_Num"] = df["Date"].dt.isocalendar().week
     return df
-
-# Function to display calendar view - defined at the module level
-def display_calendar_view(data_df, condition_name=None):
-    if len(data_df) == 0:
-        st.write("No data to display in calendar view.")
-        return
-    
-    # Group data by year and week number
-    years = sorted(data_df["Year"].unique())
-    
-    for year in years:
-        year_data = data_df[data_df["Year"] == year]
-        if len(year_data) == 0:
-            continue
-            
-        st.write(f"### {year}")
-        
-        # Create a calendar-like matrix for the year
-        # Each row represents a month, each column represents a week number
-        
-        # Get all week numbers in this year
-        min_week = 1
-        max_week = 53  # Max possible ISO week number
-        
-        # Create month labels
-        months = list(range(1, 13))
-        month_names = [calendar.month_name[m] for m in months]
-        
-        # Create a 12x53 grid for the entire year (months x weeks)
-        # We'll use HTML to make it more compact and visually appealing
-        
-        html_calendar = f"""
-        <style>
-            .calendar-container {{
-                display: flex;
-                flex-direction: column;
-                font-family: Arial, sans-serif;
-                margin-bottom: 20px;
-            }}
-            .week-numbers {{
-                display: flex;
-                justify-content: space-between;
-                margin-bottom: 5px;
-                border-bottom: 1px solid #ddd;
-            }}
-            .week-number {{
-                width: 20px;
-                text-align: center;
-                font-size: 10px;
-                color: #666;
-            }}
-            .month-row {{
-                display: flex;
-                margin-bottom: 5px;
-                align-items: center;
-            }}
-            .month-label {{
-                width: 100px;
-                font-weight: bold;
-                margin-right: 10px;
-            }}
-            .week-cells {{
-                display: flex;
-                flex-grow: 1;
-            }}
-            .week-cell {{
-                width: 20px;
-                height: 20px;
-                margin: 0 1px;
-                text-align: center;
-                font-size: 11px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }}
-            .week-cell.has-data {{
-                background-color: #4CAF50;
-                color: white;
-                border-radius: 50%;
-            }}
-            .week-cell.condition1 {{
-                background-color: #2196F3;
-                color: white;
-                border-radius: 50%;
-            }}
-            .week-cell.condition2 {{
-                background-color: #FF9800;
-                color: white;
-                border-radius: 50%;
-            }}
-            .week-cell.both-conditions {{
-                background-color: #9C27B0;
-                color: white;
-                border-radius: 50%;
-            }}
-            .legend {{
-                display: flex;
-                margin-top: 10px;
-                align-items: center;
-            }}
-            .legend-item {{
-                display: flex;
-                align-items: center;
-                margin-right: 15px;
-            }}
-            .legend-color {{
-                width: 15px;
-                height: 15px;
-                border-radius: 50%;
-                margin-right: 5px;
-            }}
-            .all-data {{
-                background-color: #4CAF50;
-            }}
-            .cond1-color {{
-                background-color: #2196F3;
-            }}
-            .cond2-color {{
-                background-color: #FF9800;
-            }}
-            .both-color {{
-                background-color: #9C27B0;
-            }}
-        </style>
-        <div class="calendar-container">
-            <div class="week-numbers">
-                <div style="width:100px;"></div>
-        """
-        
-        # Add week number headers (only show up to week 53)
-        for week in range(min_week, max_week + 1):
-            html_calendar += f'<div class="week-number">{week}</div>'
-        
-        html_calendar += """
-            </div>
-        """
-        
-        # For each month, create a row
-        for month_num in months:
-            month_name = calendar.month_name[month_num]
-            month_data = year_data[year_data["Month_Num"] == month_num]
-            
-            html_calendar += f"""
-            <div class="month-row">
-                <div class="month-label">{month_name}</div>
-                <div class="week-cells">
-            """
-            
-            # For each week in the year, check if we have data for this month
-            for week in range(min_week, max_week + 1):
-                week_data = month_data[month_data["Week_Number"] == week]
-                
-                cell_class = "week-cell"
-                cell_content = ""
-                
-                if len(week_data) > 0:
-                    cell_class += " has-data"
-                    # Show count of data points in this week
-                    cell_content = len(week_data)
-                    
-                    # If we're in comparison mode with condition name
-                    if condition_name:
-                        cell_class = f"week-cell {condition_name}"
-                
-                html_calendar += f'<div class="{cell_class}">{cell_content}</div>'
-            
-            html_calendar += """
-                </div>
-            </div>
-            """
-        
-        html_calendar += """
-        </div>
-        """
-        
-        if condition_name:
-            # No legend needed for single condition view
-            pass
-        else:
-            # Add legend for general view
-            html_calendar += """
-            <div class="legend">
-                <div class="legend-item">
-                    <div class="legend-color all-data"></div>
-                    <div>Has Data</div>
-                </div>
-            </div>
-            """
-        
-        st.markdown(html_calendar, unsafe_allow_html=True)
-
-# Function to display comparison calendar view - defined at the module level
-def display_comparison_calendar_view(df1, df2):
-    if len(df1) == 0 and len(df2) == 0:
-        st.write("No data to display in calendar view.")
-        return
-    
-    # Combine the data from both conditions
-    combined_df = pd.concat([
-        df1.assign(condition="condition1"),
-        df2.assign(condition="condition2")
-    ])
-    
-    # Group data by year and week number
-    years = sorted(combined_df["Year"].unique())
-    
-    for year in years:
-        year_data = combined_df[combined_df["Year"] == year]
-        if len(year_data) == 0:
-            continue
-            
-        st.write(f"### {year}")
-        
-        # Create month labels
-        months = list(range(1, 13))
-        
-        # Create a 12x53 grid for the entire year (months x weeks)
-        html_calendar = f"""
-        <style>
-            .calendar-container {{
-                display: flex;
-                flex-direction: column;
-                font-family: Arial, sans-serif;
-                margin-bottom: 20px;
-            }}
-            .week-numbers {{
-                display: flex;
-                justify-content: space-between;
-                margin-bottom: 5px;
-                border-bottom: 1px solid #ddd;
-            }}
-            .week-number {{
-                width: 20px;
-                text-align: center;
-                font-size: 10px;
-                color: #666;
-            }}
-            .month-row {{
-                display: flex;
-                margin-bottom: 5px;
-                align-items: center;
-            }}
-            .month-label {{
-                width: 100px;
-                font-weight: bold;
-                margin-right: 10px;
-            }}
-            .week-cells {{
-                display: flex;
-                flex-grow: 1;
-            }}
-            .week-cell {{
-                width: 20px;
-                height: 20px;
-                margin: 0 1px;
-                text-align: center;
-                font-size: 11px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }}
-            .week-cell.condition1 {{
-                background-color: #2196F3;
-                color: white;
-                border-radius: 50%;
-            }}
-            .week-cell.condition2 {{
-                background-color: #FF9800;
-                color: white;
-                border-radius: 50%;
-            }}
-            .week-cell.both-conditions {{
-                background-color: #9C27B0;
-                color: white;
-                border-radius: 50%;
-            }}
-            .legend {{
-                display: flex;
-                margin-top: 10px;
-                align-items: center;
-            }}
-            .legend-item {{
-                display: flex;
-                align-items: center;
-                margin-right: 15px;
-            }}
-            .legend-color {{
-                width: 15px;
-                height: 15px;
-                border-radius: 50%;
-                margin-right: 5px;
-            }}
-            .cond1-color {{
-                background-color: #2196F3;
-            }}
-            .cond2-color {{
-                background-color: #FF9800;
-            }}
-            .both-color {{
-                background-color: #9C27B0;
-            }}
-        </style>
-        <div class="calendar-container">
-            <div class="week-numbers">
-                <div style="width:100px;"></div>
-        """
-        
-        # Add week number headers (only show up to week 53)
-        for week in range(1, 54):
-            html_calendar += f'<div class="week-number">{week}</div>'
-        
-        html_calendar += """
-            </div>
-        """
-        
-        # For each month, create a row
-        for month_num in months:
-            month_name = calendar.month_name[month_num]
-            month_data = year_data[year_data["Month_Num"] == month_num]
-            
-            html_calendar += f"""
-            <div class="month-row">
-                <div class="month-label">{month_name}</div>
-                <div class="week-cells">
-            """
-            
-            # For each week in the year, check if we have data for this month
-            for week in range(1, 54):
-                week_data = month_data[month_data["Week_Number"] == week]
-                
-                cell_class = "week-cell"
-                cell_content = ""
-                
-                if len(week_data) > 0:
-                    # Check if data is from condition1, condition2, or both
-                    has_condition1 = "condition1" in week_data["condition"].values
-                    has_condition2 = "condition2" in week_data["condition"].values
-                    
-                    if has_condition1 and has_condition2:
-                        cell_class += " both-conditions"
-                        # Count how many unique dates (to handle overlaps)
-                        unique_dates = week_data["Date"].nunique()
-                        cell_content = unique_dates
-                    elif has_condition1:
-                        cell_class += " condition1"
-                        cell_content = len(week_data)
-                    elif has_condition2:
-                        cell_class += " condition2"
-                        cell_content = len(week_data)
-                
-                html_calendar += f'<div class="{cell_class}">{cell_content}</div>'
-            
-            html_calendar += """
-                </div>
-            </div>
-            """
-        
-        html_calendar += """
-        </div>
-        """
-        
-        # Add legend
-        html_calendar += """
-        <div class="legend">
-            <div class="legend-item">
-                <div class="legend-color cond1-color"></div>
-                <div>Condition 1</div>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color cond2-color"></div>
-                <div>Condition 2</div>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color both-color"></div>
-                <div>Both Conditions</div>
-            </div>
-        </div>
-        """
-        
-        st.markdown(html_calendar, unsafe_allow_html=True)
-
-# Function to apply filters - defined at the module level  
-def apply_filters(filter_params, base_df):
-    filtered = base_df.copy()
-    filtered = filtered[
-        (filtered["Date"] >= pd.to_datetime(filter_params["date_range"][0])) &
-        (filtered["Date"] <= pd.to_datetime(filter_params["date_range"][1])) &
-        (filtered["Monday Size"] >= filter_params["monday_range"][0]) &
-        (filtered["Monday Size"] <= filter_params["monday_range"][1]) &
-        (filtered["Year"].isin(filter_params["selected_years"])) &
-        (filtered["Quarter"].isin(filter_params["selected_quarters"])) &
-        (filtered["Weekly"].isin(filter_params["week_filter"])) &
-        (filtered["Monday"].isin(filter_params["mon_filter"])) &
-        (filtered["Tuesday"].isin(filter_params["tue_filter"]))
-    ]
-    
-    if filter_params["other_side"] != "All":
-        filtered = filtered[filtered["Other Side Taken"] == filter_params["other_side"]]
-        
-    return filtered
 
 df = load_data()
 
@@ -458,35 +57,36 @@ with tab1:
         # Filter button
         run_filter = st.button("🔎 Search")
 
-    # Filter logic for single mode
-    single_filter_params = {
-        "date_range": date_range,
-        "monday_range": monday_range,
-        "other_side": other_side,
-        "selected_years": selected_years,
-        "selected_quarters": selected_quarters,
-        "week_filter": week_filter,
-        "mon_filter": mon_filter,
-        "tue_filter": tue_filter
-    }
-    
+    # Filter logic
     filtered_df = df.copy()
     if run_filter:
-        filtered_df = apply_filters(single_filter_params, df)
+        filtered_df = filtered_df[
+            (filtered_df["Date"] >= pd.to_datetime(date_range[0])) &
+            (filtered_df["Date"] <= pd.to_datetime(date_range[1])) &
+            (filtered_df["Monday Size"] >= monday_range[0]) &
+            (filtered_df["Monday Size"] <= monday_range[1]) &
+            (filtered_df["Year"].isin(selected_years)) &
+            (filtered_df["Quarter"].isin(selected_quarters)) &
+            (filtered_df["Weekly"].isin(week_filter)) &
+            (filtered_df["Monday"].isin(mon_filter)) &
+            (filtered_df["Tuesday"].isin(tue_filter))
+        ]
+        if other_side != "All":
+            filtered_df = filtered_df[filtered_df["Other Side Taken"] == other_side]
         st.success(f"✅ {len(filtered_df)} rows matched the filters.")
         
-        # Display dataframe
-        st.dataframe(filtered_df.drop(columns=["Month_Num", "Quarter"]), use_container_width=True)
+        # Display data and calendar view
+        col1, col2 = st.columns([2, 1])
         
-        # Add calendar view
-        st.subheader("Calendar View")
-        display_calendar_view(filtered_df)
+        with col1:
+            st.subheader("Filtered Data")
+            st.dataframe(filtered_df.drop(columns=["Month_Num", "Quarter", "Week_Num"]), use_container_width=True)
+        
+        with col2:
+            st.subheader("Calendar View")
+            create_calendar_view(filtered_df)
     else:
-        st.dataframe(df.drop(columns=["Month_Num", "Quarter"]), use_container_width=True)
-        
-        # Display calendar for all data
-        st.subheader("Calendar View")
-        display_calendar_view(df)
+        st.dataframe(df.drop(columns=["Month_Num", "Quarter", "Week_Num"]), use_container_width=True)
 
 with tab2:
     st.header("Comparison Tool")
@@ -495,7 +95,7 @@ with tab2:
     # Create two columns for the filters
     col1, col2 = st.columns(2)
     
-    # Define function to create filter UI
+    # Define function to create filter UI and apply filters
     def create_filter_ui(container, label):
         with container:
             st.subheader(f"{label} Filter")
@@ -552,11 +152,134 @@ with tab2:
     condition1 = create_filter_ui(col1, "Condition 1")
     condition2 = create_filter_ui(col2, "Condition 2")
     
+    # Function to apply filters
+    def apply_filters(filter_params):
+        filtered = df.copy()
+        filtered = filtered[
+            (filtered["Date"] >= pd.to_datetime(filter_params["date_range"][0])) &
+            (filtered["Date"] <= pd.to_datetime(filter_params["date_range"][1])) &
+            (filtered["Monday Size"] >= filter_params["monday_range"][0]) &
+            (filtered["Monday Size"] <= filter_params["monday_range"][1]) &
+            (filtered["Year"].isin(filter_params["selected_years"])) &
+            (filtered["Quarter"].isin(filter_params["selected_quarters"])) &
+            (filtered["Weekly"].isin(filter_params["week_filter"])) &
+            (filtered["Monday"].isin(filter_params["mon_filter"])) &
+            (filtered["Tuesday"].isin(filter_params["tue_filter"]))
+        ]
+        
+        if filter_params["other_side"] != "All":
+            filtered = filtered[filtered["Other Side Taken"] == filter_params["other_side"]]
+            
+        return filtered
+    
+    # Function to create calendar view
+    def create_calendar_view(data_df, condition1_df=None, condition2_df=None):
+        if data_df.empty:
+            st.info("No data to display in calendar view")
+            return
+        
+        # Get unique years in the filtered data
+        years = sorted(data_df["Year"].unique())
+        
+        for year in years:
+            st.write(f"### {year}")
+            
+            # Get data for this year
+            year_data = data_df[data_df["Year"] == year]
+            
+            # Create a 4x3 grid for months
+            for row in range(4):
+                cols = st.columns(3)
+                for col in range(3):
+                    month_num = row * 3 + col + 1
+                    month_name = calendar.month_name[month_num]
+                    
+                    with cols[col]:
+                        st.write(f"**{month_name}**")
+                        
+                        # Get data for this month
+                        month_data = year_data[year_data["Month_Num"] == month_num]
+                        
+                        # Create calendar grid
+                        weeks_in_month = set()
+                        if not month_data.empty:
+                            weeks_in_month = set(month_data["Week_Num"].unique())
+                        
+                        # Get all possible weeks in this month
+                        first_day = datetime(year, month_num, 1)
+                        last_day = datetime(year, month_num, calendar.monthrange(year, month_num)[1])
+                        
+                        start_week = first_day.isocalendar()[1]
+                        end_week = last_day.isocalendar()[1]
+                        
+                        # Handle year boundary cases
+                        if end_week < start_week:  # December-January transition
+                            possible_weeks = list(range(start_week, 54)) + list(range(1, end_week + 1))
+                        else:
+                            possible_weeks = list(range(start_week, end_week + 1))
+                        
+                        # Create week indicators
+                        week_cols = st.columns(len(possible_weeks))
+                        
+                        for i, week_num in enumerate(possible_weeks):
+                            with week_cols[i]:
+                                # Determine color based on presence in datasets
+                                if condition1_df is not None and condition2_df is not None:
+                                    # For comparison mode
+                                    in_cond1 = False
+                                    in_cond2 = False
+                                    
+                                    cond1_year_data = condition1_df[condition1_df["Year"] == year]
+                                    cond1_month_data = cond1_year_data[cond1_year_data["Month_Num"] == month_num]
+                                    if not cond1_month_data.empty and week_num in set(cond1_month_data["Week_Num"].unique()):
+                                        in_cond1 = True
+                                    
+                                    cond2_year_data = condition2_df[condition2_df["Year"] == year]
+                                    cond2_month_data = cond2_year_data[cond2_year_data["Month_Num"] == month_num]
+                                    if not cond2_month_data.empty and week_num in set(cond2_month_data["Week_Num"].unique()):
+                                        in_cond2 = True
+                                    
+                                    if in_cond1 and in_cond2:
+                                        box_color = "green"  # Both conditions
+                                        tooltip = "Both conditions"
+                                    elif in_cond1:
+                                        box_color = "blue"  # Only condition 1
+                                        tooltip = "Condition 1 only"
+                                    elif in_cond2:
+                                        box_color = "orange"  # Only condition 2
+                                        tooltip = "Condition 2 only"
+                                    else:
+                                        box_color = "lightgray"  # Neither condition
+                                        tooltip = "No match"
+                                else:
+                                    # For single filter mode
+                                    if week_num in weeks_in_month:
+                                        box_color = "green"
+                                        tooltip = "Match"
+                                    else:
+                                        box_color = "lightgray"
+                                        tooltip = "No match"
+                                
+                                # Display week box with color
+                                st.markdown(
+                                    f"""
+                                    <div title="{tooltip}" style="
+                                        background-color: {box_color};
+                                        color: white;
+                                        text-align: center;
+                                        padding: 5px 0;
+                                        border-radius: 5px;
+                                        font-size: 0.8em;
+                                    ">{week_num}</div>
+                                    """, 
+                                    unsafe_allow_html=True
+                                )
+    
     # Run comparison
     if st.button("🔍 Compare Conditions"):
         # Apply filters
-        df1 = apply_filters(condition1, df)
-        df2 = apply_filters(condition2, df)
+        df1 = apply_filters(condition1)
+        df2 = apply_filters(condition2)
         
         # Calculate similarity metrics
         common_rows = pd.merge(df1, df2, how='inner')
@@ -580,31 +303,40 @@ with tab2:
             else:
                 st.metric("Similarity %", "0%")
         
-        # Display calendar view
-        st.subheader("Calendar View Comparison")
-        display_comparison_calendar_view(df1, df2)
-        
         # Display results
-        st.subheader("Detailed Results")
-        tab_results1, tab_results2, tab_common, tab_diff1, tab_diff2 = st.tabs([
+        tab_results1, tab_results2, tab_common, tab_diff1, tab_diff2, tab_calendar = st.tabs([
             f"Condition 1 ({len(df1)})", 
             f"Condition 2 ({len(df2)})", 
             f"Common ({len(common_rows)})",
             f"Only in Condition 1 ({len(only_in_1)})",
-            f"Only in Condition 2 ({len(only_in_2)})"
+            f"Only in Condition 2 ({len(only_in_2)})",
+            "Calendar View"
         ])
         
         with tab_results1:
-            st.dataframe(df1.drop(columns=["Month_Num", "Quarter"]), use_container_width=True)
+            st.dataframe(df1.drop(columns=["Month_Num", "Quarter", "Week_Num"]), use_container_width=True)
             
         with tab_results2:
-            st.dataframe(df2.drop(columns=["Month_Num", "Quarter"]), use_container_width=True)
+            st.dataframe(df2.drop(columns=["Month_Num", "Quarter", "Week_Num"]), use_container_width=True)
             
         with tab_common:
-            st.dataframe(common_rows.drop(columns=["Month_Num", "Quarter"]), use_container_width=True)
+            st.dataframe(common_rows.drop(columns=["Month_Num", "Quarter", "Week_Num"]), use_container_width=True)
             
         with tab_diff1:
-            st.dataframe(only_in_1.drop(columns=["Month_Num", "Quarter"]), use_container_width=True)
+            st.dataframe(only_in_1.drop(columns=["Month_Num", "Quarter", "Week_Num"]), use_container_width=True)
             
         with tab_diff2:
-            st.dataframe(only_in_2.drop(columns=["Month_Num", "Quarter"]), use_container_width=True)
+            st.dataframe(only_in_2.drop(columns=["Month_Num", "Quarter", "Week_Num"]), use_container_width=True)
+            
+        with tab_calendar:
+            st.write("""
+            ### Calendar View Legend
+            - **Green** boxes: Weeks present in both conditions
+            - **Blue** boxes: Weeks only in Condition 1
+            - **Orange** boxes: Weeks only in Condition 2
+            - **Light Gray** boxes: Weeks in the time range but not matching either condition
+            """)
+            
+            # Use the combined dataframe for the calendar view
+            combined_df = pd.concat([df1, df2]).drop_duplicates()
+            create_calendar_view(combined_df, df1, df2)
